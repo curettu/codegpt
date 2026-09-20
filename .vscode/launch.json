@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run CodeGPT VS Code Bridge",
+      "type": "extensionHost",
+      "request": "launch",
+      "runtimeExecutable": "${execPath}",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/bridge"
+      ],
+      "outFiles": [
+        "${workspaceFolder}/bridge/**/*.js"
+      ]
+    }
+  ]
+}

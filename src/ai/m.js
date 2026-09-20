@@ -1,0 +1,44 @@
+const providers = [
+	{ id: 'luna', name: 'GPT-5.6 Luna', detail: 'Основная модель' },
+	{ id: 'claude', name: 'Claude', detail: 'Резервная модель' },
+	{ id: 'gemini', name: 'Gemini 3.1 Flash-Lite', detail: 'Безлимитный резерв' },
+];
+
+const defaultEndpoint = 'http://127.0.0.1:3210/chat';
+
+export function getProviders() {
+	return providers.map((provider) => ({ ...provider }));
+}
+
+export function selectProvider(usage = {}) {
+	return providers.find((provider) => usage[provider.id] !== 'exhausted') || providers.at(-1);
+}
+
+export async function askCodeGPT(prompt, options = {}) {
+	const provider = selectProvider(options.usage);
+	const endpoint = options.endpoint || window.CODEGPT_ENDPOINT || defaultEndpoint;
+
+	try {
+		const response = await fetch(endpoint, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ prompt, provider: provider.id, attachments: options.attachments || [] }),
+		});
+		if (!response.ok) throw new Error('Сервер вернул ' + response.status);
+		const result = await response.json();
+		return { provider: providers.find((item) => item.id === result.provider) || provider, text: result.text };
+	} catch (error) {
+		if (options.allowDemo === false) throw error;
+	}
+
+	await new Promise((resolve) => setTimeout(resolve, 850));
+	return {
+		provider,
+		demo: true,
+		text: 'Я понял задачу: «' + prompt + '»\n\n'
+			+ 'Это демо-ответ CodeGPT. Интерфейс и умный роутинг уже готовы. '
+			+ 'Чтобы получать реальные ответы от Copilot или других моделей без ключей в браузере, '
+			+ 'подключите VS Code bridge или свой сервер к "window.CODEGPT_ENDPOINT". '
+			+ 'Ключи должны храниться только на серверной стороне.',
+	};
+}

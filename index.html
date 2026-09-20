@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="description" content="CodeGPT — локальное AI-пространство для разработки с VS Code и GitHub Copilot" />
+		<title>CodeGPT — AI coding workspace</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+		<link rel="stylesheet" href="/src/styles.css" />
+		<script src="https://unpkg.com/lucide@latest"></script>
+		<script src="https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+	</head>
+	<body>
+		<div class="app-shell">
+			<aside class="sidebar" aria-label="Навигация">
+				<div class="brand-row">
+					<div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+					<span class="brand-name">Code<span>GPT</span></span>
+					<button class="icon-button sidebar-close" type="button" aria-label="Закрыть меню"><i data-lucide="x"></i></button>
+				</div>
+
+				<button class="new-chat-button" id="new-chat" type="button"><i data-lucide="plus"></i><span>Новый диалог</span><kbd>⌘ K</kbd></button>
+
+				<div class="sidebar-section">
+					<div class="section-label"><span>Диалоги</span><button class="icon-button" type="button" aria-label="Поиск диалога"><i data-lucide="search"></i></button></div>
+					<nav class="conversation-list" id="conversation-list"></nav>
+				</div>
+
+				<div class="sidebar-bottom">
+					<div class="route-card">
+						<div class="route-heading"><span class="status-pulse"></span><span>Умный роутинг</span><span class="route-live">LIVE</span></div>
+						<p>Модели переключаются автоматически, когда меняется доступный лимит.</p>
+						<div class="provider-stack"><span class="provider active-provider">GPT-5.6 Luna</span><span class="provider">Claude</span><span class="provider">Gemini 3.1 Flash-Lite</span></div>
+					</div>
+					<button class="profile-row" type="button"><span class="avatar">A</span><span class="profile-copy"><strong>Локальный режим</strong><small>Без API-ключа</small></span><i data-lucide="chevron-up"></i></button>
+				</div>
+			</aside>
+
+			<main class="main-panel">
+				<header class="topbar">
+					<button class="icon-button menu-toggle" id="menu-toggle" type="button" aria-label="Открыть меню"><i data-lucide="menu"></i></button>
+					<div class="model-picker"><span class="status-pulse"></span><span>GPT-5.6 Luna</span><i data-lucide="chevron-down"></i></div>
+					<div class="topbar-actions"><button class="icon-button" type="button" aria-label="Настройки"><i data-lucide="sliders-horizontal"></i></button><button class="avatar top-avatar" type="button" aria-label="Профиль">A</button></div>
+				</header>
+
+				<section class="chat-view" id="chat-view">
+					<div class="chat-content" id="messages">
+						<div class="welcome-block" id="welcome-block">
+							<div class="eyebrow"><span class="eyebrow-line"></span>Ваш AI для разработки</div>
+							<h1>Что создадим<br /><em>сегодня?</em></h1>
+							<p class="welcome-copy">Пишите код, разбирайте ошибки и превращайте идеи в рабочие решения.</p>
+							<div class="prompt-grid">
+								<button class="prompt-card" type="button" data-prompt="Объясни, как спроектировать чистую архитектуру для нового приложения"><span class="prompt-icon orange"><i data-lucide="layers-3"></i></span><span>Спроектировать архитектуру</span><i data-lucide="arrow-up-right"></i></button>
+								<button class="prompt-card" type="button" data-prompt="Помоги найти и исправить ошибку в моем коде"><span class="prompt-icon blue"><i data-lucide="bug"></i></span><span>Найти ошибку в коде</span><i data-lucide="arrow-up-right"></i></button>
+								<button class="prompt-card" type="button" data-prompt="Сделай ревью моего кода и предложи улучшения"><span class="prompt-icon green"><i data-lucide="scan-search"></i></span><span>Провести code review</span><i data-lucide="arrow-up-right"></i></button>
+							</div>
+						</div>
+					</div>
+
+					<div class="composer-wrap">
+						<div class="composer" id="composer">
+							<input id="file-input" type="file" multiple hidden />
+							<div class="attachment-list" id="attachment-list" aria-live="polite"></div>
+							<textarea id="prompt-input" rows="1" placeholder="Спросите что-нибудь о коде..." aria-label="Сообщение для CodeGPT"></textarea>
+							<div class="composer-toolbar"><div class="toolbar-left"><button class="tool-button" id="attach-button" type="button" aria-label="Прикрепить файлы"><i data-lucide="paperclip"></i><span>Файлы</span></button><button class="tool-button" type="button" aria-label="Добавить контекст"><i data-lucide="plus"></i><span>Контекст</span></button></div><div class="toolbar-right"><span class="shortcut-hint">Enter для отправки</span><button class="send-button" id="send-button" type="button" aria-label="Отправить сообщение"><i data-lucide="arrow-up"></i></button></div></div>
+						</div>
+						<div class="composer-note"><span><i data-lucide="shield-check"></i> Данные остаются в вашем окружении</span><span>CodeGPT может ошибаться — проверяйте важный код</span></div>
+					</div>
+				</section>
+			</main>
+		</div>
+		<div class="mobile-overlay" id="mobile-overlay"></div>
+		<script type="module" src="/src/script.js"></script>
+	</body>
+</html>
