@@ -11,7 +11,17 @@ const fileInput = document.querySelector('#file-input');
 const attachButton = document.querySelector('#attach-button');
 const attachmentList = document.querySelector('#attachment-list');
 const conversationList = document.querySelector('#conversation-list');
+const workspacePanel = document.querySelector('#workspace-panel');
+const workspaceTitle = document.querySelector('#workspace-title');
+const previewFrame = document.querySelector('#preview-frame');
+const previewStatus = document.querySelector('#preview-status');
+const previewLink = document.querySelector('#preview-link');
+const fileSelect = document.querySelector('#file-select');
+const codeEditor = document.querySelector('#code-editor');
+const codeStatus = document.querySelector('#code-status');
 const attachments = [];
+let workspaceProject = null;
+let workspaceFiles = [];
 const storageKey = 'codegpt-chats-v1';
 
 let chats = loadChats();
@@ -120,7 +130,7 @@ function addMessage(role, text, provider, attachedFiles = [], persist = true, pr
 
 function renderProjectActions(project) {
 	if (!project?.chatId) return '';
-	return `<div class="project-actions"><button class="project-action deploy-action" type="button" data-deploy-chat="${escapeHtml(project.chatId)}"><i data-lucide="rocket"></i><span>Опубликовать на Vercel</span></button><a class="project-action" href="/api/download?chatId=${encodeURIComponent(project.chatId)}"><i data-lucide="download"></i><span>Скачать ZIP</span></a><span class="deploy-status" aria-live="polite"></span></div>`;
+	return `<div class="project-actions"><button class="project-action workspace-action" type="button" data-open-workspace="${escapeHtml(project.chatId)}"><i data-lucide="panels-top-left"></i><span>Открыть workspace</span></button><button class="project-action deploy-action" type="button" data-deploy-chat="${escapeHtml(project.chatId)}"><i data-lucide="rocket"></i><span>Опубликовать на Vercel</span></button><a class="project-action" href="/api/download?chatId=${encodeURIComponent(project.chatId)}"><i data-lucide="download"></i><span>Скачать ZIP</span></a><span class="deploy-status" aria-live="polite"></span></div>`;
 }
 
 function renderFileChips(files) {
@@ -227,6 +237,8 @@ sendButton.addEventListener('click', () => submitPrompt());
 attachButton.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => { attachments.push(...Array.from(fileInput.files)); fileInput.value = ''; renderAttachments(); input.focus(); });
 messages.addEventListener('click', async (event) => {
+		const workspaceButton = event.target.closest('[data-open-workspace]');
+		if (workspaceButton) openWorkspace(workspaceButton.dataset.openWorkspace);
 		const button = event.target.closest('[data-deploy-chat]');
 		if (!button) return;
 		const status = button.parentElement.querySelector('.deploy-status');
@@ -243,6 +255,18 @@ messages.addEventListener('click', async (event) => {
 			button.disabled = false;
 		}
 });
+document.querySelectorAll('[data-workspace-tab]').forEach((tab) => tab.addEventListener('click', () => {
+		document.querySelectorAll('.workspace-tab').forEach((item) => item.classList.toggle('active', item === tab));
+		document.querySelectorAll('.workspace-view').forEach((view) => view.classList.toggle('active', view.id === `${tab.dataset.workspaceTab}-view`));
+}));
+document.querySelector('#close-workspace').addEventListener('click', () => { workspacePanel.hidden = true; });
+fileSelect.addEventListener('change', () => loadSelectedFile());
+document.querySelector('#save-file').addEventListener('click', () => {
+		const file = workspaceFiles.find((item) => item.path === fileSelect.value);
+		if (!file) return;
+		file.content = codeEditor.value;
+		codeStatus.textContent = 'Изменения сохранены локально';
+});
 document.querySelector('#new-chat').addEventListener('click', startNewChat);
 document.querySelector('#menu-toggle').addEventListener('click', () => toggleSidebar(true));
 document.querySelector('.sidebar-close').addEventListener('click', () => toggleSidebar(false));
@@ -251,3 +275,38 @@ window.addEventListener('popstate', () => { activeChat = getChatFromUrl(); isTem
 
 if (activeChat) openChat(activeChat, true);
 else { ensureActiveChat(); renderChat(); renderChatList(); }
+
+async function openWorkspace(chatId) {
+	workspaceProject = { chatId };
+	workspacePanel.hidden = false;
+	workspaceTitle.textContent = 'Загруженное приложение';
+	previewStatus.textContent = 'Получаем preview...';
+	try {
+		const [previewResponse, filesResponse] = await Promise.all([fetch(`/api/preview?chatId=${encodeURIComponent(chatId)}`), fetch(`/api/files?chatId=${encodeURIComponent(chatId)}`)]);
+		const preview = await previewResponse.json();
+		const fileResult = await filesResponse.json();
+		if (!previewResponse.ok) throw new Error(preview.error || 'Preview недоступен');
+		if (!filesResponse.ok) throw new Error(fileResult.error || 'Файлы недоступны');
+		previewFrame.src = `/api/preview-proxy?chatId=${encodeURIComponent(chatId)}&path=/`;
+		previewLink.href = preview.url;
+		previewLink.hidden = false;
+		previewStatus.textContent = 'Preview готов';
+		workspaceFiles = normalizeFiles(fileResult);
+		fileSelect.innerHTML = workspaceFiles.map((file) => `<option value="${escapeHtml(file.path)}">${escapeHtml(file.path)}</option>`).join('');
+		loadSelectedFile();
+	} catch (error) {
+		previewStatus.textContent = error.message;
+		codeStatus.textContent = error.message;
+	}
+}
+
+function normalizeFiles(result) {
+	const files = result.files || result.data?.files || [];
+	return files.map((file) => ({ path: file.path || file.name, content: file.content || file.text || '' })).filter((file) => file.path);
+}
+
+function loadSelectedFile() {
+	const file = workspaceFiles.find((item) => item.path === fileSelect.value);
+	codeEditor.value = file?.content || '';
+	codeStatus.textContent = file ? `${file.path} · локальная копия` : 'Выберите файл';
+}

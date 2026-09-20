@@ -73,6 +73,12 @@
 					</div>
 				</section>
 			</main>
+			<aside class="workspace-panel" id="workspace-panel" aria-label="Рабочая область приложения" hidden>
+				<div class="workspace-header"><div><span class="workspace-kicker">GENERATED APP</span><strong id="workspace-title">Новое приложение</strong></div><button class="icon-button" id="close-workspace" type="button" aria-label="Закрыть рабочую область"><i data-lucide="x"></i></button></div>
+				<div class="workspace-tabs"><button class="workspace-tab active" type="button" data-workspace-tab="preview"><i data-lucide="play-square"></i>Preview</button><button class="workspace-tab" type="button" data-workspace-tab="code"><i data-lucide="code-2"></i>Code</button></div>
+				<section class="workspace-view active" id="preview-view"><div class="preview-toolbar"><span id="preview-status">Получаем preview...</span><a id="preview-link" href="#" target="_blank" rel="noreferrer" hidden>Открыть отдельно</a></div><iframe id="preview-frame" title="Предпросмотр сгенерированного приложения" sandbox="allow-scripts allow-forms allow-popups"></iframe></section>
+				<section class="workspace-view" id="code-view"><div class="code-toolbar"><select id="file-select" aria-label="Файл проекта"></select><button class="icon-button" id="save-file" type="button" aria-label="Сохранить файл"><i data-lucide="save"></i></button></div><textarea id="code-editor" spellcheck="false" aria-label="Редактор кода"></textarea><span class="code-status" id="code-status">Выберите файл</span></section>
+			</aside>
 		</div>
 		<div class="mobile-overlay" id="mobile-overlay"></div>
 		<script type="module" src="/src/script.js"></script>
