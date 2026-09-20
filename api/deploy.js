@@ -1,5 +1,3 @@
-const { v0 } = require('v0');
-
 module.exports = async function handler(request, response) {
 	if (request.method !== 'POST') {
 		response.status(405).json({ error: 'Method not allowed' });
@@ -15,9 +13,13 @@ module.exports = async function handler(request, response) {
 		return;
 	}
 	try {
-		const result = await v0.chats.deploy({ chatId });
-		if (result.error) throw new Error(result.error.message);
-		response.status(200).json(result.data);
+		const upstream = await fetch(`https://api.v0.dev/v2/chats/${encodeURIComponent(chatId)}/deploy`, {
+			method: 'POST',
+			headers: { Authorization: `Bearer ${process.env.V0_API_KEY}` },
+		});
+		const result = await upstream.json();
+		if (!upstream.ok) throw new Error(result.error?.message || result.message || `v0 API returned ${upstream.status}`);
+		response.status(200).json(result);
 	} catch (error) {
 		response.status(502).json({ error: error.message || 'Не удалось задеплоить приложение' });
 	}

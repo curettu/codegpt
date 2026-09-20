@@ -1,5 +1,3 @@
-const { v0 } = require('v0');
-
 const maxPromptLength = 200000;
 
 async function handler(request, response) {
@@ -23,13 +21,18 @@ async function handler(request, response) {
 	}
 
 	try {
-		const result = await v0.chats.create({
-			message: prompt,
-			attachments: attachments.filter((file) => file.data).map((file) => ({ url: file.data })),
+		const upstream = await fetch('https://api.v0.dev/v2/chats', {
+			method: 'POST',
+			headers: { Authorization: `Bearer ${process.env.V0_API_KEY}`, 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				message: prompt,
+				attachments: attachments.filter((file) => file.data).map((file) => ({ url: file.data })),
+			}),
 		});
-		if (result.error) throw new Error(result.error.message);
-		const chat = result.data.chat;
-		const message = result.data.messages?.at(-1);
+		const result = await upstream.json();
+		if (!upstream.ok) throw new Error(result.error?.message || result.message || `v0 API returned ${upstream.status}`);
+		const chat = result.chat;
+		const message = result.messages?.at(-1);
 		response.status(200).json({ provider: 'v0', chatId: chat.id, preview: chat.previewUrl || null, text: extractText(message), project: { chatId: chat.id, vercelProjectId: chat.vercelProjectId || null } });
 	} catch (error) {
 		response.status(502).json({ error: error.message || 'v0 API request failed' });

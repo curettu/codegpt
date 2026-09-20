@@ -27,8 +27,8 @@ export async function askCodeGPT(prompt, options = {}) {
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ prompt, provider: provider.id, attachments: options.attachments || [] }),
 		});
-		if (!response.ok) throw new Error('Сервер вернул ' + response.status);
-		const result = await response.json();
+		const result = await response.json().catch(() => ({}));
+		if (!response.ok) throw new Error(result.error || 'Сервер вернул ' + response.status);
 		return { provider: providers.find((item) => item.id === result.provider) || provider, text: result.text, project: result.project };
 	} catch (error) {
 		if (window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') throw error;
