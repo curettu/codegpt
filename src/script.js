@@ -16,7 +16,8 @@ const workspaceTitle = document.querySelector('#workspace-title');
 const previewFrame = document.querySelector('#preview-frame');
 const previewStatus = document.querySelector('#preview-status');
 const previewLink = document.querySelector('#preview-link');
-const fileSelect = document.querySelector('#file-select');
+const fileTree = document.querySelector('#file-tree');
+const activeFileName = document.querySelector('#active-file-name');
 const codeEditor = document.querySelector('#code-editor');
 const codeStatus = document.querySelector('#code-status');
 const attachments = [];
@@ -260,9 +261,8 @@ document.querySelectorAll('[data-workspace-tab]').forEach((tab) => tab.addEventL
 		document.querySelectorAll('.workspace-view').forEach((view) => view.classList.toggle('active', view.id === `${tab.dataset.workspaceTab}-view`));
 }));
 document.querySelector('#close-workspace').addEventListener('click', () => { workspacePanel.hidden = true; });
-fileSelect.addEventListener('change', () => loadSelectedFile());
 document.querySelector('#save-file').addEventListener('click', () => {
-		const file = workspaceFiles.find((item) => item.path === fileSelect.value);
+		const file = workspaceFiles.find((item) => item.path === activeFileName.dataset.path);
 		if (!file) return;
 		file.content = codeEditor.value;
 		codeStatus.textContent = 'Изменения сохранены локально';
@@ -292,7 +292,7 @@ async function openWorkspace(chatId) {
 		previewLink.hidden = false;
 		previewStatus.textContent = 'Preview готов';
 		workspaceFiles = normalizeFiles(fileResult);
-		fileSelect.innerHTML = workspaceFiles.map((file) => `<option value="${escapeHtml(file.path)}">${escapeHtml(file.path)}</option>`).join('');
+		renderFileTree();
 		loadSelectedFile();
 	} catch (error) {
 		previewStatus.textContent = error.message;
@@ -306,7 +306,21 @@ function normalizeFiles(result) {
 }
 
 function loadSelectedFile() {
-	const file = workspaceFiles.find((item) => item.path === fileSelect.value);
+	const file = workspaceFiles.find((item) => item.path === activeFileName.dataset.path) || workspaceFiles[0];
+	if (file) activeFileName.dataset.path = file.path;
+	activeFileName.textContent = file?.path?.split('/').pop() || 'Выберите файл';
 	codeEditor.value = file?.content || '';
 	codeStatus.textContent = file ? `${file.path} · локальная копия` : 'Выберите файл';
+}
+
+function renderFileTree() {
+	fileTree.innerHTML = workspaceFiles.map((file) => `<button class="file-tree-item" type="button" data-file-path="${escapeHtml(file.path)}"><i data-lucide="${file.path.endsWith('.css') ? 'palette' : file.path.endsWith('.json') ? 'braces' : 'file-code-2'}"></i><span>${escapeHtml(file.path)}</span></button>`).join('');
+	fileTree.querySelectorAll('[data-file-path]').forEach((button) => button.addEventListener('click', () => {
+		activeFileName.dataset.path = button.dataset.filePath;
+		fileTree.querySelectorAll('.active').forEach((item) => item.classList.remove('active'));
+		button.classList.add('active');
+		loadSelectedFile();
+	}));
+	lucide.createIcons();
+	fileTree.querySelector('.file-tree-item')?.click();
 }
