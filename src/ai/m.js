@@ -4,7 +4,9 @@ const providers = [
 	{ id: 'gemini', name: 'Gemini 3.1 Flash-Lite', detail: 'Безлимитный резерв' },
 ];
 
-const defaultEndpoint = 'http://127.0.0.1:3210/chat';
+const defaultEndpoint = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+	? 'http://127.0.0.1:3210/chat'
+	: '/api/chat';
 
 export function getProviders() {
 	return providers.map((provider) => ({ ...provider }));
@@ -36,9 +38,6 @@ export async function askCodeGPT(prompt, options = {}) {
 		provider,
 		demo: true,
 		text: 'Я понял задачу: «' + prompt + '»\n\n'
-			+ 'Это демо-ответ CodeGPT. Интерфейс и умный роутинг уже готовы. '
-			+ 'Чтобы получать реальные ответы от Copilot или других моделей без ключей в браузере, '
-			+ 'подключите VS Code bridge или свой сервер к "window.CODEGPT_ENDPOINT". '
-			+ 'Ключи должны храниться только на серверной стороне.',
+			+ 'Это демо-ответ CodeGPT. Публичный API ещё не настроен: добавьте AI_API_KEY и модели в настройках Vercel.',
 	};
 }
