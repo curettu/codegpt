@@ -1,5 +1,11 @@
 {
   "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/chat/:path*",
+      "destination": "/"
+    }
+  ],
   "functions": {
     "api/chat.js": {
       "maxDuration": 60
