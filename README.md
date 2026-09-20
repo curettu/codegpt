@@ -2,7 +2,9 @@
 
 CodeGPT is a public AI coding workspace with Markdown, LaTeX, code blocks, file attachments, persistent chats, and shareable `/chat/<id>` routes.
 
-The production site uses the included Vercel serverless API. Visitors do not need VS Code, extensions, or their own API keys. The provider key is stored only in Vercel Environment Variables.
+It uses the official v0 API to generate applications. Each generated app can be published to Vercel or downloaded as a ZIP archive.
+
+The production site uses the official v0 API through the included Vercel serverless API. Visitors do not need VS Code, extensions, or their own API keys. The v0 key is stored only in Vercel Environment Variables.
 
 ## Public deployment on Vercel
 
@@ -10,16 +12,12 @@ The production site uses the included Vercel serverless API. Visitors do not nee
 2. In **Settings -> Environment Variables**, add:
 
    ```text
-   AI_API_KEY=your-server-side-key
-   AI_BASE_URL=https://api.openai.com/v1
-   AI_MODEL_LUNA=your-primary-model
-   AI_MODEL_CLAUDE=your-fallback-model
-   AI_MODEL_GEMINI=your-last-fallback-model
+   V0_API_KEY=your-v0-server-side-key
    ```
 
 3. Deploy and open the generated `*.vercel.app` URL.
 
-`AI_BASE_URL` must expose an OpenAI-compatible `/chat/completions` endpoint. The model names are configured by you; Copilot-only model names cannot be called from a public Vercel function.
+Create the key in [v0 settings](https://v0.app/settings/keys). Keep it server-side and never prefix it with `NEXT_PUBLIC_`.
 
 ## Local development
 

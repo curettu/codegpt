@@ -96,26 +96,31 @@ function renderChat() {
 		return;
 	}
 	messages.innerHTML = '';
-	activeChat.messages.forEach((message) => addMessage(message.role, message.text, message.provider, message.files || [], false));
+	activeChat.messages.forEach((message) => addMessage(message.role, message.text, message.provider, message.files || [], false, message.project));
 	messages.lastElementChild?.scrollIntoView({ block: 'nearest' });
 }
 
-function addMessage(role, text, provider, attachedFiles = [], persist = true) {
+function addMessage(role, text, provider, attachedFiles = [], persist = true, project = null) {
 	const message = document.createElement('article');
 	message.className = `message ${role}`;
 	message.innerHTML = role === 'user'
 		? `<div class="message-avatar user-avatar">A</div><div class="message-body"><div class="message-meta">Вы <time>сейчас</time></div><p>${escapeHtml(text)}</p>${renderFileChips(attachedFiles)}</div>`
-		: `<div class="message-avatar ai-avatar"><span></span><span></span><span></span></div><div class="message-body"><div class="message-meta">CodeGPT <span class="provider-label">${provider || 'GPT-5.6 Luna'}</span><time>сейчас</time></div><div class="assistant-content">${formatAnswer(text)}</div></div>`;
+		: `<div class="message-avatar ai-avatar"><span></span><span></span><span></span></div><div class="message-body"><div class="message-meta">CodeGPT <span class="provider-label">${provider || 'v0'}</span><time>сейчас</time></div><div class="assistant-content">${formatAnswer(text)}</div>${renderProjectActions(project)}</div>`;
 	messages.append(message);
 	lucide.createIcons();
 	if (persist) {
 		ensureActiveChat();
-		activeChat.messages.push({ role, text, provider, files: attachedFiles.map(({ name, type, size }) => ({ name, type, size })) });
+		activeChat.messages.push({ role, text, provider, project, files: attachedFiles.map(({ name, type, size }) => ({ name, type, size })) });
 		activeChat.updatedAt = Date.now();
 		saveChats();
 		renderChatList();
 	}
 	message.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderProjectActions(project) {
+	if (!project?.chatId) return '';
+	return `<div class="project-actions"><button class="project-action deploy-action" type="button" data-deploy-chat="${escapeHtml(project.chatId)}"><i data-lucide="rocket"></i><span>Опубликовать на Vercel</span></button><a class="project-action" href="/api/download?chatId=${encodeURIComponent(project.chatId)}"><i data-lucide="download"></i><span>Скачать ZIP</span></a><span class="deploy-status" aria-live="polite"></span></div>`;
 }
 
 function renderFileChips(files) {
@@ -169,7 +174,7 @@ async function submitPrompt(value = input.value) {
 	try {
 		const encodedFiles = await Promise.all(selectedFiles.map(encodeFile));
 		const answer = await askCodeGPT(prompt || 'Проанализируй прикреплённые файлы.', { attachments: encodedFiles });
-		addMessage('assistant', answer.text, answer.provider.name);
+		addMessage('assistant', answer.text, answer.provider.name, [], true, answer.project);
 	} catch (error) {
 		addMessage('assistant', `Не удалось получить ответ: ${error.message}`);
 	} finally {
@@ -221,6 +226,23 @@ input.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !eve
 sendButton.addEventListener('click', () => submitPrompt());
 attachButton.addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => { attachments.push(...Array.from(fileInput.files)); fileInput.value = ''; renderAttachments(); input.focus(); });
+messages.addEventListener('click', async (event) => {
+		const button = event.target.closest('[data-deploy-chat]');
+		if (!button) return;
+		const status = button.parentElement.querySelector('.deploy-status');
+		button.disabled = true;
+		status.textContent = 'Публикуем...';
+		try {
+			const response = await fetch('/api/deploy', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chatId: button.dataset.deployChat }) });
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Ошибка публикации');
+			status.textContent = result.url ? 'Опубликовано' : `Deployment: ${result.deploymentId || 'готов'}`;
+			if (result.url) status.innerHTML = `<a href="${escapeHtml(result.url)}" target="_blank" rel="noreferrer">Открыть приложение</a>`;
+		} catch (error) {
+			status.textContent = error.message;
+			button.disabled = false;
+		}
+});
 document.querySelector('#new-chat').addEventListener('click', startNewChat);
 document.querySelector('#menu-toggle').addEventListener('click', () => toggleSidebar(true));
 document.querySelector('.sidebar-close').addEventListener('click', () => toggleSidebar(false));

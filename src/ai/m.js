@@ -1,4 +1,5 @@
 const providers = [
+	{ id: 'v0', name: 'v0', detail: 'Vercel app builder' },
 	{ id: 'luna', name: 'GPT-5.6 Luna', detail: 'Основная модель' },
 	{ id: 'claude', name: 'Claude', detail: 'Резервная модель' },
 	{ id: 'gemini', name: 'Gemini 3.1 Flash-Lite', detail: 'Безлимитный резерв' },
@@ -28,7 +29,7 @@ export async function askCodeGPT(prompt, options = {}) {
 		});
 		if (!response.ok) throw new Error('Сервер вернул ' + response.status);
 		const result = await response.json();
-		return { provider: providers.find((item) => item.id === result.provider) || provider, text: result.text };
+		return { provider: providers.find((item) => item.id === result.provider) || provider, text: result.text, project: result.project };
 	} catch (error) {
 		if (options.allowDemo === false) throw error;
 	}

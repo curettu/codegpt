@@ -1,0 +1,11 @@
+{
+  "name": "codegpt-v0-builder",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "v0": "latest"
+  }
+}
