@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title>CodeGPT</title>
+  <desc>Green code brackets around a compact AI pixel core</desc>
+  <rect width="64" height="64" rx="16" fill="#15221c"/>
+  <path d="M25 18 14 32l11 14" fill="none" stroke="#69c58c" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+  <path d="m39 18 11 14-11 14" fill="none" stroke="#69c58c" stroke-linecap="round" stroke-linejoin="round" stroke-width="6"/>
+  <rect x="29" y="25" width="6" height="6" rx="2" fill="#d8f5e1"/>
+  <rect x="29" y="33" width="6" height="6" rx="2" fill="#69c58c"/>
+</svg>
