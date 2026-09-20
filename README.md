@@ -7,7 +7,7 @@ The production site uses the included Vercel serverless API. Visitors do not nee
 ## Public deployment on Vercel
 
 1. Import this repository into Vercel.
-2. Add these Environment Variables in the project settings:
+2. In **Settings -> Environment Variables**, add:
 
    ```text
    AI_API_KEY=your-server-side-key
