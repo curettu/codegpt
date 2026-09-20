@@ -29,6 +29,7 @@ export async function askCodeGPT(prompt, options = {}) {
 		});
 		const result = await response.json().catch(() => ({}));
 		if (!response.ok) throw new Error(result.error || 'Сервер вернул ' + response.status);
+		if (result.pending) return waitForGeneration(result.chatId, result.messageId, provider);
 		return { provider: providers.find((item) => item.id === result.provider) || provider, text: result.text, project: result.project };
 	} catch (error) {
 		if (window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') throw error;
@@ -42,4 +43,14 @@ export async function askCodeGPT(prompt, options = {}) {
 		text: 'Я понял задачу: «' + prompt + '»\n\n'
 			+ 'Это демо-ответ CodeGPT. Публичный API ещё не настроен: добавьте AI_API_KEY и модели в настройках Vercel.',
 	};
+}
+
+async function waitForGeneration(chatId, messageId, provider, startedAt = Date.now()) {
+	if (Date.now() - startedAt > 10 * 60 * 1000) throw new Error('Генерация v0 заняла больше 10 минут');
+	await new Promise((resolve) => setTimeout(resolve, 3000));
+	const response = await fetch(`/api/message?chatId=${encodeURIComponent(chatId)}&messageId=${encodeURIComponent(messageId)}`);
+	const result = await response.json().catch(() => ({}));
+	if (!response.ok) throw new Error(result.error || 'Не удалось проверить генерацию v0');
+	if (result.pending) return waitForGeneration(chatId, messageId, provider, startedAt);
+	return { provider, text: result.text, project: result.project };
 }

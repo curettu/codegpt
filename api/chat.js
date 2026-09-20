@@ -21,7 +21,7 @@ async function handler(request, response) {
 	}
 
 	try {
-		const upstream = await fetch('https://api.v0.dev/v2/chats', {
+		const upstream = await fetch('https://api.v0.dev/v2/chats/async', {
 			method: 'POST',
 			headers: { Authorization: `Bearer ${process.env.V0_API_KEY}`, 'Content-Type': 'application/json' },
 			body: JSON.stringify({
@@ -31,19 +31,11 @@ async function handler(request, response) {
 		});
 		const result = await upstream.json();
 		if (!upstream.ok) throw new Error(result.error?.message || result.message || `v0 API returned ${upstream.status}`);
-		const chat = result.chat;
-		const message = result.messages?.at(-1);
-		response.status(200).json({ provider: 'v0', chatId: chat.id, preview: chat.previewUrl || null, text: extractText(message), project: { chatId: chat.id, vercelProjectId: chat.vercelProjectId || null } });
+		response.status(202).json({ provider: 'v0', pending: true, chatId: result.chatId, messageId: result.messageId });
 	} catch (error) {
 		response.status(502).json({ error: error.message || 'v0 API request failed' });
 	}
 }
 
-function extractText(message) {
-	if (!message) return 'v0 создал приложение.';
-	if (typeof message.content === 'string') return message.content;
-	if (Array.isArray(message.parts)) return message.parts.filter((part) => part.type === 'text').map((part) => part.text).join('\n');
-	return 'v0 создал приложение.';
-}
 
 module.exports = handler;
