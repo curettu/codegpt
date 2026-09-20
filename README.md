@@ -19,21 +19,8 @@ The production site uses the official v0 API through the included Vercel serverl
 
 Create the key in [v0 settings](https://v0.app/settings/keys). Keep it server-side and never prefix it with `NEXT_PUBLIC_`.
 
-## Local development
-
-1. Open the repository in VS Code.
-2. Press `F5` and run **Run CodeGPT VS Code Bridge**.
-3. In the Extension Development Host, make sure GitHub Copilot is signed in.
-4. From the repository root, run:
-
-   ```powershell
-   node server.mjs
-   ```
-
-5. Open <http://127.0.0.1:4173>.
-
 Chats are saved in the browser and have shareable routes such as `/chat/<id>`. Markdown, LaTeX, code blocks, multiple files, and images are supported.
 
 ## Important
 
-The chat history is local to the browser profile. In production, model access and usage limits come from the configured provider account. The optional VS Code bridge is only for local development and listens on loopback only.
+The chat history is local to the browser profile. Model access and usage limits come from the configured v0 account.
