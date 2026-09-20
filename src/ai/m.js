@@ -19,13 +19,13 @@ export function selectProvider(usage = {}) {
 
 export async function askCodeGPT(prompt, options = {}) {
 	const provider = selectProvider(options.usage);
-	const endpoint = options.endpoint || window.CODEGPT_ENDPOINT || defaultEndpoint;
+	const endpoint = options.endpoint || window.CODEGPT_ENDPOINT || (options.chatId ? '/api/followup' : defaultEndpoint);
 
 	try {
 		const response = await fetch(endpoint, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ prompt, provider: provider.id, attachments: options.attachments || [] }),
+			body: JSON.stringify({ prompt, provider: provider.id, chatId: options.chatId, attachments: options.attachments || [] }),
 		});
 		const result = await response.json().catch(() => ({}));
 		if (!response.ok) throw new Error(result.error || 'Сервер вернул ' + response.status);

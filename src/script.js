@@ -171,6 +171,7 @@ async function submitPrompt(value = input.value) {
 	if ((!prompt && !attachments.length) || sendButton.disabled) return;
 	const selectedFiles = attachments.splice(0, attachments.length);
 	const chat = ensureActiveChat();
+	const projectChatId = chat.messages.slice().reverse().find((message) => message.project?.chatId)?.project.chatId;
 	if (isTemporaryChat) {
 		chats.push(chat);
 		isTemporaryChat = false;
@@ -184,8 +185,8 @@ async function submitPrompt(value = input.value) {
 	setLoading(true);
 	try {
 		const encodedFiles = await Promise.all(selectedFiles.map(encodeFile));
-		const answer = await askCodeGPT(prompt || 'Проанализируй прикреплённые файлы.', { attachments: encodedFiles });
-		addMessage('assistant', answer.text, answer.provider.name, [], true, answer.project);
+		const answer = await askCodeGPT(prompt || 'Проанализируй прикреплённые файлы.', { attachments: encodedFiles, chatId: projectChatId });
+		addMessage('assistant', answer.text, answer.provider.name, [], true, answer.project || (projectChatId ? { chatId: projectChatId } : null));
 	} catch (error) {
 		addMessage('assistant', `Не удалось получить ответ: ${error.message}`);
 	} finally {
