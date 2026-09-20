@@ -6,7 +6,7 @@ async function handler(request, response) {
 		return;
 	}
 
-	const { prompt, attachments = [] } = request.body || {};
+	const { prompt, attachments = [], settings = {} } = request.body || {};
 	if (typeof prompt !== 'string' || !prompt.trim()) {
 		response.status(400).json({ error: 'Нужен непустой prompt' });
 		return;
@@ -26,6 +26,7 @@ async function handler(request, response) {
 			headers: { Authorization: `Bearer ${process.env.V0_API_KEY}`, 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				message: prompt,
+				systemPrompt: buildSystemPrompt(settings),
 				attachments: attachments.filter((file) => file.data).map((file) => ({ url: file.data })),
 			}),
 		});
@@ -36,6 +37,8 @@ async function handler(request, response) {
 		response.status(502).json({ error: error.message || 'v0 API request failed' });
 	}
 }
+
+function buildSystemPrompt(settings) { const tone = { professional: 'Профессионально и структурированно.', friendly: 'Дружелюбно и понятно.', direct: 'Прямо, строго и без лишних слов.', playful: 'Легко и с уместным юмором.' }[settings.tone] || 'Профессионально и структурированно.'; const detail = { concise: 'Будь кратким.', balanced: 'Давай сбалансированное объяснение.', deep: 'Давай подробное объяснение с примерами.' }[settings.detail] || 'Давай сбалансированное объяснение.'; return `Ты CodeGPT, AI-конструктор приложений. ${tone} ${detail} Отвечай на ${settings.language === 'en' ? 'английском' : 'русском'} языке. ${settings.selfCheck !== false ? 'Проверяй решение перед ответом.' : ''} ${settings.uiCheck !== false ? 'Проверяй UX и адаптивность.' : ''}`; }
 
 
 module.exports = handler;

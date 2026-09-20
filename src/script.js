@@ -20,6 +20,7 @@ const fileTree = document.querySelector('#file-tree');
 const activeFileName = document.querySelector('#active-file-name');
 const codeEditor = document.querySelector('#code-editor');
 const codeStatus = document.querySelector('#code-status');
+const settings = loadSettings();
 const attachments = [];
 let workspaceProject = null;
 let workspaceFiles = [];
@@ -31,6 +32,9 @@ let isTemporaryChat = false;
 
 lucide.createIcons();
 const markdown = window.markdownit({ html: false, breaks: true, linkify: true });
+
+function loadSettings() { try { return { tone: 'professional', language: 'ru', detail: 'balanced', selfCheck: true, uiCheck: true, autoPreview: true, ...JSON.parse(localStorage.getItem('codegpt-settings') || '{}') }; } catch { return { tone: 'professional', language: 'ru', detail: 'balanced', selfCheck: true, uiCheck: true, autoPreview: true }; } }
+function saveSettings() { localStorage.setItem('codegpt-settings', JSON.stringify(settings)); document.querySelector('#settings-saved').textContent = 'Сохранено'; }
 
 function loadChats() {
 	try {
@@ -185,7 +189,7 @@ async function submitPrompt(value = input.value) {
 	setLoading(true);
 	try {
 		const encodedFiles = await Promise.all(selectedFiles.map(encodeFile));
-		const answer = await askCodeGPT(prompt || 'Проанализируй прикреплённые файлы.', { attachments: encodedFiles, chatId: projectChatId });
+		const answer = await askCodeGPT(prompt || 'Проанализируй прикреплённые файлы.', { attachments: encodedFiles, chatId: projectChatId, settings });
 		addMessage('assistant', answer.text, answer.provider.name, [], true, answer.project || (projectChatId ? { chatId: projectChatId } : null));
 	} catch (error) {
 		addMessage('assistant', `Не удалось получить ответ: ${error.message}`);
@@ -269,6 +273,12 @@ document.querySelector('#save-file').addEventListener('click', () => {
 		codeStatus.textContent = 'Изменения сохранены локально';
 });
 document.querySelector('#new-chat').addEventListener('click', startNewChat);
+const settingsBackdrop = document.querySelector('#settings-backdrop');
+document.querySelector('#settings-button').addEventListener('click', () => { settingsBackdrop.hidden = false; });
+document.querySelector('#close-settings').addEventListener('click', () => { settingsBackdrop.hidden = true; });
+document.querySelector('#settings-done').addEventListener('click', () => { settingsBackdrop.hidden = true; saveSettings(); });
+['tone', 'language', 'detail'].forEach((key) => { const field = document.querySelector(`#ai-${key}`); field.value = settings[key]; field.addEventListener('change', () => { settings[key] = field.value; saveSettings(); }); });
+[['selfCheck', '#ai-self-check'], ['uiCheck', '#ai-ui-check'], ['autoPreview', '#auto-preview']].forEach(([key, selector]) => { const field = document.querySelector(selector); field.checked = settings[key]; field.addEventListener('change', () => { settings[key] = field.checked; saveSettings(); }); });
 document.querySelector('#menu-toggle').addEventListener('click', () => toggleSidebar(true));
 document.querySelector('.sidebar-close').addEventListener('click', () => toggleSidebar(false));
 overlay.addEventListener('click', () => toggleSidebar(false));

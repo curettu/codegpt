@@ -25,7 +25,7 @@ export async function askCodeGPT(prompt, options = {}) {
 		const response = await fetch(endpoint, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ prompt, provider: provider.id, chatId: options.chatId, attachments: options.attachments || [] }),
+			body: JSON.stringify({ prompt, provider: provider.id, chatId: options.chatId, attachments: options.attachments || [], settings: options.settings }),
 		});
 		const result = await response.json().catch(() => ({}));
 		if (!response.ok) throw new Error(result.error || 'Сервер вернул ' + response.status);
