@@ -31,6 +31,7 @@ export async function askCodeGPT(prompt, options = {}) {
 		const result = await response.json();
 		return { provider: providers.find((item) => item.id === result.provider) || provider, text: result.text, project: result.project };
 	} catch (error) {
+		if (window.location.hostname !== '127.0.0.1' && window.location.hostname !== 'localhost') throw error;
 		if (options.allowDemo === false) throw error;
 	}
 
